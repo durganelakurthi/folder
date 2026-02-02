@@ -1,0 +1,152 @@
+//var subnetResponse = executeREST("/InformationService/v3/Json/Query?query=SELECT+DisplayName,ADDRESS,AddressMask,CIDR,FriendlyName,Status,TotalCount,UsedCount,AvailableCount,ReservedCount,StatusName,StatusShortDescription,Location,VLAN+FROM+IPAM.Subnet+WHERE+VLAN='vlan+" + vlanNumber +"'+AND+Location='Bldg K (Plano Technology Center)'+AND+FriendlyName+NOT+LIKE+'%25con%25'+AND+Comments+NOT+LIKE+'%25con%25'+AND+DisplayName+NOT+LIKE+'%25con%25'", "GET", null);
+var vlanNum = "";
+if (vlanNumber.toUpperCase() == "UHRNNA_VLAN1")
+{
+	vlanNum = "1";
+}
+else
+{
+	vlanNum = vlanNumber;
+}
+//Below code updates the site value according to IPAM logic for datacenterRegionName passed
+if(datacenterRegionName.toLowerCase() == "uhrichsville_automation")
+{
+datacenterRegionName="Uhrichsville";
+}
+else if(datacenterRegionName.toLowerCase() == "wrn_automation")
+{
+datacenterRegionName="Warren";
+}
+else if(datacenterRegionName.toLowerCase() == "greensboro_automation")
+{
+datacenterRegionName="Greensboro";
+}
+else if(datacenterRegionName.toLowerCase() == "koblenz_automation")
+{
+datacenterRegionName="Koblenz";
+}
+else if(datacenterRegionName.toLowerCase() == "voerde_automation")
+{
+datacenterRegionName="Voerde";
+}
+else if(datacenterRegionName.toLowerCase() == "yeongju_automation")
+{
+datacenterRegionName="YeongJu";
+}
+else if(datacenterRegionName.toLowerCase() == "santo_andre")
+{
+datacenterRegionName="utinga";
+}
+else if(datacenterRegionName.toLowerCase() == "berea_automation")
+{
+datacenterRegionName="Berea";
+}
+else if(datacenterRegionName.toLowerCase() == "latchford_automation")
+{
+datacenterRegionName="Latchford";
+}
+else if(datacenterRegionName.toLowerCase() == "davenport_finishing_automation")
+{
+datacenterRegionName="Davenport_Finishing";
+}
+else if(datacenterRegionName.toLowerCase() == "davenport_casting_automation")
+{
+datacenterRegionName="Davenport_Casting";
+}
+else if(datacenterRegionName.toLowerCase() == "nachterstedt_automation")
+{
+datacenterRegionName="Nachterstedt";
+}
+else if(datacenterRegionName.toLowerCase() == "bresso_automation")
+{
+datacenterRegionName="bresso";
+}
+else if(datacenterRegionName.toLowerCase() == "pieve_automation")
+{
+datacenterRegionName="pieve";
+}
+else if(datacenterRegionName.toLowerCase() == "pinda_automation")
+{
+datacenterRegionName="pinda";
+}
+else if(datacenterRegionName.toLowerCase() == "gottingen_automation")
+{
+datacenterRegionName="gottingen";
+}
+else if(datacenterRegionName.toLowerCase() == "terre_haute")
+{
+datacenterRegionName="terre_haute";
+}
+else if(datacenterRegionName.toLowerCase() == "fort_dunlop")
+{
+datacenterRegionName="fort_dunlop";
+}
+else if(datacenterRegionName.toLowerCase() == "ohle_automation")
+{
+datacenterRegionName="ohle";
+}
+//Code to make updates to datacenterRegionName ends here
+var site = datacenterRegionName.replace('_', '%20');
+
+System.log("Datacenter Region Name value for IPAM API call is "+datacenterRegionName);
+System.log("Site value for IPAM API call is "+site);
+//throw "Forcefully failed the flow after checking Datacenter Region Name and site passed in IPAM API call."
+//original
+var subnetResponse = executeREST("/InformationService/v3/Json/Query?query=SELECT+DisplayName,ADDRESS,AddressMask,CIDR,FriendlyName,Status,TotalCount,UsedCount,AvailableCount,ReservedCount,StatusName,StatusShortDescription,Location,VLAN+FROM+IPAM.Subnet+WHERE+VLAN='" + vlanNum +"'+AND+Location='" + site +"'+AND+FriendlyName+NOT+LIKE+'%25con%25'+AND+Comments+NOT+LIKE+'%25con%25'+AND+DisplayName+NOT+LIKE+'%25con%25'", "GET", null);
+//test
+//var subnetResponse = executeREST("/InformationService/v3/Json/Query?query=SELECT+DisplayName,ADDRESS,AddressMask,CIDR,FriendlyName,Status,TotalCount,UsedCount,AvailableCount,ReservedCount,StatusName,StatusShortDescription,Location,VLAN+FROM+IPAM.Subnet+WHERE+VLAN='" + vlanNum +"'+AND+Location='" + site +"'+AND+FriendlyName+LIKE+'%25VLAN%25'+AND+DisplayName+LIKE+'%25VLAN%25'", "GET", null);
+//var subnetResponse = executeREST("/InformationService/v3/Json/Query?query=SELECT+DisplayName,ADDRESS,AddressMask,CIDR,FriendlyName,Status,TotalCount,UsedCount,AvailableCount,ReservedCount,StatusName,StatusShortDescription,Location,VLAN+FROM+IPAM.Subnet+WHERE+VLAN='" + vlanNum +"'+AND+Location='" + site +"'+AND+FriendlyName+LIKE+'%25VLAN%25'+AND+DisplayName+LIKE+'%25VLAN%25'", "GET", null);
+
+System.debug(subnetResponse.results.length );
+if (subnetResponse.results.length == 0)
+{
+	// attempt to try by adding the text 'vlan ' before the VLAN id
+	//subnetResponse = executeREST("/InformationService/v3/Json/Query?query=SELECT+DisplayName,ADDRESS,AddressMask,CIDR,FriendlyName,Status,TotalCount,UsedCount,AvailableCount,ReservedCount,StatusName,StatusShortDescription,VLAN+FROM+IPAM.Subnet+WHERE+VLAN='vlan+" + vlanNumber + "'+AND+FriendlyName+NOT+LIKE+'%25con%25'+AND+Comments+NOT+LIKE+'%25con%25'+AND+DisplayName+NOT+LIKE+'%25con%25'", "GET", null);
+	site = "Bldg K";
+	subnetResponse = executeREST("/InformationService/v3/Json/Query?query=SELECT+DisplayName,ADDRESS,AddressMask,CIDR,FriendlyName,Status,TotalCount,UsedCount,AvailableCount,ReservedCount,StatusName,StatusShortDescription,Location,VLAN+FROM+IPAM.Subnet+WHERE+VLAN='" + vlanNum +"'+AND+Location+LIKE+'%25Bldg%25'+AND+FriendlyName+NOT+LIKE+'%25con%25'+AND+Comments+NOT+LIKE+'%25con%25'+AND+DisplayName+NOT+LIKE+'%25con%25'", "GET", null);
+	if (subnetResponse.results.length == 0)
+		throw "Subnet data for VLAN '" + vlanNum + "' could not be obtained.";
+}
+
+//if (subnetResponse.results.length > 1)
+//	throw "Multiple subnets are associated with VLAN '" + vlanNumber + "'";
+var subnetInfo = subnetResponse.results[0];
+
+if (subnetInfo.AvailableCount == 0)
+	throw "No available IPs for VLAN '" + vlanNum + "'";
+
+att_subnetNetwork = subnetInfo.ADDRESS;
+att_subnetNetworkCidr = subnetInfo.CIDR.toString();
+System.log(att_subnetNetwork);
+System.log(att_subnetNetworkCidr);
+
+
+function executeREST(operationUrl, method, body)
+{
+	System.debug("operation: " + operationUrl + ", Request Type: " + method);
+	var request = restHost.createRequest(method, operationUrl, body);
+	request.contentType = "application/json";
+	request.setHeader("Accept", "application/json");
+	
+	var response = request.execute();
+	System.debug("response: " + response);
+	System.debug("statusCode: " + response.statusCode);
+	if (response.statusCode == 200 || response.statusCode == 201)
+	{
+		var ABobj = System.getModule("com.dedicatedcloud.library.rest").getJSONFromString(response.contentAsString);
+		var testjson = JSON.stringify(ABobj);
+		System.log("TEST JSON LOG IS "+testjson);
+		//System.debug("TEST JSON DEBUG LOG IS "+testjson);
+		//throw "Forcefully failed here as part of testing by Akshay Bansal";
+		if (response.contentAsString == null || response.contentAsString == "null" || response.contentAsString == "")
+			return System.getModule("com.dedicatedcloud.library.rest").getJSONFromString('{}');
+		else
+			return System.getModule("com.dedicatedcloud.library.rest").getJSONFromString(response.contentAsString);
+	}
+	else
+	{
+		var json = System.getModule("com.dedicatedcloud.library.rest").getJSONFromString(response.contentAsString);
+		System.error('REST request failed: ' + json.message);
+		throw 'REST request failed: ' + json.message;
+	}
+}
