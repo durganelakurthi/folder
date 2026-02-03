@@ -1,0 +1,102 @@
+///	Set IP Status
+/*var setIpStatusBodyJson = '["' + ipAddress + '", "Available"]';
+var setIpStatusResponse = executeREST("/InformationService/v3/json/Invoke/IPAM.SubnetManagement/ChangeIPStatus", "POST", setIpStatusBodyJson);
+
+//	Wait for 1 second after changing status
+System.sleep(1000);
+
+//	Get IpStatusText
+var getIpInfoResponse = executeREST("/InformationService/v3/Json/Query?query=SELECT+IpNodeId,IPStatus,IPStatusText+FROM+IPAM.IPInfo+WHERE+IPAddress='" + ipAddress + "'", "GET", null);
+if (getIpInfoResponse.results.length > 1)
+	throw "Multiple IP NodeIds returned for IP '" + ipAddress + "'"
+
+if (getIpInfoResponse.results[0].IPStatusText != "Available")
+	throw "IP '" + ipAddress + "' Status was not updated to 'Available'.  Response: " + JSON.stringify(getIpInfoResponse.results[0]);
+
+System.log("IP '" + ipAddress + "' has been released");
+
+
+
+
+function executeREST(operationUrl, method, body)
+{
+	//System.debug("operation: " + operationUrl + ", Request Type: " + method);
+	var request = restHost.createRequest(method, operationUrl, body);
+	request.contentType = "application/json";
+	request.setHeader("Accept", "application/json");
+	
+	var response = request.execute();
+	System.debug(response.contentAsString);
+	
+	if (response.statusCode == 200 || response.statusCode == 201)
+	{
+		if (response.contentAsString == null || response.contentAsString == "null" || response.contentAsString == "")
+			return System.getModule("com.dedicatedcloud.library.rest").getJSONFromString('{}');
+		else
+			return System.getModule("com.dedicatedcloud.library.rest").getJSONFromString(response.contentAsString);
+	}
+	else
+	{
+		var json = System.getModule("com.dedicatedcloud.library.rest").getJSONFromString(response.contentAsString);
+		System.error('REST request failed: ' + json.message);
+		throw 'REST request failed: ' + json.message;
+	}
+}
+*/
+// Function to check if the IP exists in IPAM 
+function checkIpExists(ipAddress) {
+    var getIp = executeREST("/InformationService/v3/Json/Query?query=SELECT+IpNodeId+FROM+IPAM.IPInfo+WHERE+IPAddress='" + ipAddress + "'", "GET", null);
+
+    if (getIp != "IP not found" && getIp.results.length > 0) 
+        return true; // IP exists
+    else 
+        return false; // IP not found
+}
+
+if (checkIpExists(ipAddress)) {
+    // Set IP Status
+    var setIpStatusBodyJson = '["' + ipAddress + '", "Available"]';
+    var setIpStatusResponse = executeREST("/InformationService/v3/json/Invoke/IPAM.SubnetManagement/ChangeIPStatus", "POST", setIpStatusBodyJson);
+
+    // Wait for 1 second after changing status
+    System.sleep(1000);
+
+    // Get IP Status Text
+    if (setIpStatusResponse != "IP not found") {
+        var getIpInfoResponse = executeREST("/InformationService/v3/Json/Query?query=SELECT+IpNodeId,IPStatus,IPStatusText+FROM+IPAM.IPInfo+WHERE+IPAddress='" + ipAddress + "'", "GET", null);
+
+        if (getIpInfoResponse.results.length > 1)
+            throw "Multiple IP NodeIds returned for IP '" + ipAddress + "'";
+
+        if (getIpInfoResponse.results[0].IPStatusText != "Available")
+            throw "IP '" + ipAddress + "' Status was not updated to 'Available'.  Response: " + JSON.stringify(getIpInfoResponse.results[0]);
+
+        System.log("IP '" + ipAddress + "' has been released");
+    }
+}
+ else 
+    System.log("IP '" + ipAddress + "' not found in IPAM.");
+
+function executeREST(operationUrl, method, body)
+{
+	var request = restHost.createRequest(method, operationUrl, body);
+	request.contentType = "application/json";
+	request.setHeader("Accept", "application/json");
+	var response = request.execute();
+	if (response.statusCode == 200 || response.statusCode == 201)
+	{
+		if (response.contentAsString == null || response.contentAsString == "null" || response.contentAsString == "")
+			return System.getModule("com.dedicatedcloud.library.rest").getJSONFromString('{}');
+		else
+			return System.getModule("com.dedicatedcloud.library.rest").getJSONFromString(response.contentAsString);
+	}
+	else
+	{
+		var json = System.getModule("com.dedicatedcloud.library.rest").getJSONFromString(response.contentAsString);
+		System.error('REST request failed: ' + json.message);
+		throw 'REST request failed: ' + json.message;
+	}
+}
+
+
+
