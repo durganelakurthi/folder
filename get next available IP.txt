@@ -1,0 +1,33 @@
+var nextIpBody = '["' + att_subnetNetwork + '", "' + att_subnetNetworkCidr + '"]';
+var nextIpResponse = executeREST("/InformationService/v3/json/Invoke/IPAM.SubnetManagement/GetFirstAvailableIp", "POST", nextIpBody);
+
+var ipAddress = nextIpResponse.replace('/\"/g', '');
+if (System.getModule("com.dedicatedcloud.library.ip").validateIPv4Address(ipAddress) == false)
+	throw "Response ' " + nextIpResponse + " ' is not a valid IPv4 Address.";
+
+att_ipAddress = ipAddress;
+
+
+
+
+
+
+function executeREST(operationUrl, method, body)
+{
+	//System.debug("operation: " + operationUrl + ", Request Type: " + method);
+	var request = restHost.createRequest(method, operationUrl, body);
+	request.contentType = "application/json";
+	request.setHeader("Accept", "application/json");
+	
+	var response = request.execute();
+	if (response.statusCode == 200)
+	{
+		return System.getModule("com.dedicatedcloud.library.rest").getJSONFromString(response.contentAsString);
+	}
+	else
+	{
+		var json = System.getModule("com.dedicatedcloud.library.rest").getJSONFromString(response.contentAsString);
+		System.error('REST request failed: ' + json.message);
+		throw 'REST request failed: ' + json.message;
+	}
+}

@@ -1,0 +1,60 @@
+//	Set IP Status
+//var setIpStatusBodyJson = '["' + att_ipAddress + '", "Used"]';
+var setIpStatusBodyJson = '["' + att_ipAddress + '", "Reserved"]';
+var setIpStatusResponse = executeREST("/InformationService/v3/json/Invoke/IPAM.SubnetManagement/ChangeIPStatus", "POST", setIpStatusBodyJson);
+
+//	Wait for 1 second after changing status
+System.sleep(1000);
+
+try
+{
+	//	Get IpNodeId
+	var getIpInfoResponse = executeREST("/InformationService/v3/Json/Query?query=SELECT+IpNodeId,IPStatus,IPStatusText+FROM+IPAM.IPInfo+WHERE+IPAddress='" + att_ipAddress + "'", "GET", null);
+	if (getIpInfoResponse.results.length > 1)
+		throw "Multiple IP NodeIds returned for IP '" + att_ipAddress + "'"
+	
+	if (getIpInfoResponse.results[0].IPStatusText != "Reserved")
+		throw "IP '" + att_ipAddress + "' Status was not updated to 'Reserved'.  Response: " + JSON.stringify(getIpInfoResponse.results[0]);
+	
+	//	Set IP Hoztname
+	var setHostnameBodyJson = '{"DnsBackward":"' + att_hostFqdnForReservation + '"}';
+	var setHostnameResponse = executeREST("/InformationService/v3/Json/swis://" + restHost.url.split('/')[2].split(':')[0] + "/Orion/IPAM.IPNode/IpNodeId=" + getIpInfoResponse.results[0].IpNodeId, "POST", setHostnameBodyJson);
+	
+	System.log("IP '" + att_ipAddress + "' reserved with name '" + att_hostFqdnForReservation + "'");
+}
+catch (e)
+{
+	var setIpStatusBodyJson_error = '["' + att_ipAddress + '", "Available"]';
+	var setIpStatusResponse_error = executeREST("/InformationService/v3/json/Invoke/IPAM.SubnetManagement/ChangeIPStatus", "POST", setIpStatusBodyJson_error);
+	throw e;
+}
+
+
+
+
+function executeREST(operationUrl, method, body)
+{
+	System.debug("operation: " + operationUrl + ", Request Type: " + method);
+	var request = restHost.createRequest(method, operationUrl, body);
+	request.contentType = "application/json";
+	request.setHeader("Accept", "application/json");
+	
+	var response = request.execute();
+	
+	if (response.statusCode == 200 || response.statusCode == 201)
+	{
+		if (response.contentAsString == null || response.contentAsString == "null" || response.contentAsString == "")
+			return System.getModule("com.dedicatedcloud.library.rest").getJSONFromString('{}');
+		else
+			return System.getModule("com.dedicatedcloud.library.rest").getJSONFromString(response.contentAsString);
+	}
+	else
+	{
+		var json = System.getModule("com.dedicatedcloud.library.rest").getJSONFromString(response.contentAsString);
+		System.error('REST request failed: ' + json.message);
+		throw 'REST request failed: ' + json.message;
+	}
+}
+
+
+
